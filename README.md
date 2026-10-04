@@ -4,7 +4,7 @@
 > That same Miku from the "slysh ty zalip, opa opa op" trend!
 > 
 > *Та самая Мику из тренда «слышь ты залип, опа опа оп»!*
-> 
+> [Переход на Русскую версию](README_RU.md)
 
 ---
 
