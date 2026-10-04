@@ -35,7 +35,7 @@ sudo apt install build-essential libraylib-dev libx11-dev
 
  * Клонируйте репозиторий и перейдите в папку:
   ```bash
-   git clone [https://github.com/CBEKY6/miku-desktop-mascot-trend.git](https://github.com/CBEKY6/miku-desktop-mascot-trend.git)
+  git clone https://github.com/CBEKY6/miku-desktop-mascot-trend.git
    ```
    ```bash
    cd miku-desktop-mascot-trend
