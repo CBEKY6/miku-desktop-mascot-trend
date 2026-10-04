@@ -9,33 +9,43 @@
 
 Desktop mascot for Linux written in pure C using the Raylib library. No Wallpaper Engine or Anima Engine required.
 
+
 ### Compatibility
 * 100% Working on: KDE Plasma
+* 
 * Likely to work on:
   * GNOME
   * XFCE
   * Hyprland, Niri, Sway, i3
+    
 
 *(To be honest, I haven't tested this outside of KDE Plasma, so good luck)*
 
 ### Dependencies
 
 For Arch-based distros:
-`bash
+
 sudo pacman -S gcc make raylib libx11
 
 For Debian-based distros:
+
 sudo apt update
+
 sudo apt install build-essential libraylib-dev libx11-dev
 
 How to Run
+
  * Clone the repository and enter the directory:
+ * 
    git clone https://github.com/CBEKY6/miku-desktop-mascot-trend.git
-cd miku-desktop-mascot-trend
+   
+  cd miku-desktop-mascot-trend
 
  * Make the script executable and run:
+ * 
    chmod +x run.sh
-./run.sh
+   
+   ./run.sh
 
 Русская версия
 
