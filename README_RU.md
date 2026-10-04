@@ -5,8 +5,9 @@
 > > That same Miku from the "slysh ty zalip, opa opa op" trend!
 > 
 > [Read in English](README.md)
-> Русская версия
-----------------------------------
+> ---
+> ##Русская версия
+> 
 Маскот для рабочего стола Linux, написанный на чистом C с использованием библиотеки Raylib. Никакого Wallpaper Engine или Anima Engine не требуется.
 
 Совместимость
