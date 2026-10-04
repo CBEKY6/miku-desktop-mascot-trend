@@ -80,8 +80,3 @@ sudo apt install build-essential libraylib-dev libx11-dev
    
    
    cd miku-desktop-mascot-trend
-
- * Даем права на исполнение и запускаем:
-   chmod +x run.sh
-   
-  ./run.sh
