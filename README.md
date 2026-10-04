@@ -54,10 +54,10 @@ Building and Running
  * Clone the repository and enter the directory:
  * 
 ```bash
- *git clone https://github.com/CBEKY6/miku-desktop-mascot-trend.git
+ git clone https://github.com/CBEKY6/miku-desktop-mascot-trend.git
  ```
 ```bash
- *cd miku-desktop-mascot-trend
+ cd miku-desktop-mascot-trend
 ```
 
  * Compile
