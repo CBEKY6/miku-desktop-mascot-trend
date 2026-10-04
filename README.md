@@ -33,29 +33,38 @@ Desktop mascot for Linux written in pure C using the Raylib library. No Wallpape
 
 
 For Arch-based distros:
+```bash
 
 sudo pacman -S gcc make raylib libx11
+```
 
 For Debian/Ubuntu-based distros:
+```bash
 
 sudo apt update
+```
+```bash
 
 sudo apt install build-essential libraylib-dev libx11-dev
+```
 
 
 Building and Running
 
  * Clone the repository and enter the directory:
  * 
+```bash
  *git clone https://github.com/CBEKY6/miku-desktop-mascot-trend.git
+ ```
+```bash
  *cd miku-desktop-mascot-trend
+```
 
-
- * Compile the project using Makefile:
- * 
-   make
-   
-
+ * Compile
+ * ```bash
+   gcc main.c -o miku -lraylib -lX11 -lGL -lm -lpthread -ldl -lrt
+   ```
  * Run the mascot:
- * 
+ * ```bash
    ./miku
+```
