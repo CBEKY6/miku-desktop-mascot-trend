@@ -78,6 +78,7 @@ sudo apt install build-essential libraylib-dev libx11-dev
  * 
    git clone [https://github.com/CBEKY6/miku-desktop-mascot-trend.git](https://github.com/CBEKY6/miku-desktop-mascot-trend.git)
    
+   
    cd miku-desktop-mascot-trend
 
  * Даем права на исполнение и запускаем:
