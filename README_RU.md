@@ -19,17 +19,18 @@
 Зависимости
 
 Для Arch-подобных дистрибутивов:
-
-sudo pacman -S gcc make raylib libx11
-
+```bash
+sudo pacman -S gcc raylib libx11
+```
 
 Для Debian/Ubuntu-подобных дистрибутивов:
-
+```bash
 sudo apt update
-
+```
+```bash
 sudo apt install build-essential libraylib-dev libx11-dev
 
-
+```
 Сборка и запуск
 
  * Клонируйте репозиторий и перейдите в папку:
@@ -37,14 +38,14 @@ sudo apt install build-essential libraylib-dev libx11-dev
    git clone [https://github.com/CBEKY6/miku-desktop-mascot-trend.git](https://github.com/CBEKY6/miku-desktop-mascot-trend.git)
    
    cd miku-desktop-mascot-trend
-   
 
- * Скомпилируйте проект с помощью Makefile:
- * 
-   make
-   
+   Скомпилируйте:
+   ```bash
+   gcc main.c -o miku -lraylib -lX11 -lGL -lm -lpthread -ldl -lrt
+   ```
+
 
  * Запустите маскота:
- * 
+ * ```bash
    ./miku
-   
+   ```
