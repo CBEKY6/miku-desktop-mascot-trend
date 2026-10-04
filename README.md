@@ -18,27 +18,27 @@ Desktop mascot for Linux written in pure C using the Raylib library. No Wallpape
 ### Compatibility
 
 * 100% Working on: KDE Plasma
-* 
-* Likely to work on:
-* 
+  
+  Likely to work on:
+  
   * GNOME
   * XFCE
   * Hyprland, Niri, Sway, i3
-  * 
+    
 
-*(To be honest, I haven't tested this outside of KDE Plasma, so good luck!)*
+(To be honest, I haven't tested this outside of KDE Plasma, so good luck!)*
 
 
 ### Dependencies
 
 
-For Arch-based distros:
+* For Arch-based distros:
 ```bash
 
 sudo pacman -S gcc make raylib libx11
 ```
 
-For Debian/Ubuntu-based distros:
+* For Debian/Ubuntu-based distros:
 ```bash
 
 sudo apt update
@@ -49,10 +49,10 @@ sudo apt install build-essential libraylib-dev libx11-dev
 ```
 
 
-Building and Running
+*Building and Running
 
  * Clone the repository and enter the directory:
- * 
+   
 ```bash
  git clone https://github.com/CBEKY6/miku-desktop-mascot-trend.git
  ```
@@ -61,10 +61,10 @@ Building and Running
 ```
 
  * Compile
- * ```bash
+   ```bash
    gcc main.c -o miku -lraylib -lX11 -lGL -lm -lpthread -ldl -lrt
    ```
  * Run the mascot:
- * ```bash
+   ```bash
    ./miku
 ```
