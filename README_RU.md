@@ -34,11 +34,12 @@ sudo apt install build-essential libraylib-dev libx11-dev
 Сборка и запуск
 
  * Клонируйте репозиторий и перейдите в папку:
- * 
+ * ```bash
    git clone [https://github.com/CBEKY6/miku-desktop-mascot-trend.git](https://github.com/CBEKY6/miku-desktop-mascot-trend.git)
-   
+   ```
+   ```bash
    cd miku-desktop-mascot-trend
-
+   ```
    Скомпилируйте:
    ```bash
    gcc main.c -o miku -lraylib -lX11 -lGL -lm -lpthread -ldl -lrt
