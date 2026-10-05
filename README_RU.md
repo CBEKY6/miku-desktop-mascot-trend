@@ -1,3 +1,7 @@
+<img width="1220" height="677" alt="Без названия247_20261005113508" src="https://github.com/user-attachments/assets/f830497f-a618-4114-a20b-4a9deaeb7d68" />
+
+
+
 # Hatsune Miku Desktop Mascot / Настольный маскот Хацунэ Мику
 
 
