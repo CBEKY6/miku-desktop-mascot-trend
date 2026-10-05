@@ -1,4 +1,7 @@
-<img width="612" height="677" alt="IMG_20261005_113522" src="https://github.com/user-attachments/assets/5e82fc77-1d59-4df3-a6e2-85ed70c3cd0d" />
+<img width="1220" height="677" alt="Без названия247_20261005113508" src="https://github.com/user-attachments/assets/d4a60f81-9a78-4d10-873d-0384aa64311a" />
+
+
+
 # Hatsune Miku Desktop Mascot / Настольный маскот Хацунэ Мику
 
 
