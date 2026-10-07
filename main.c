@@ -34,8 +34,7 @@ void ForceAlwaysOnTopLinux(void) {
     Display *display = XOpenDisplay(NULL);
     if (!display) return;
 
-    // В Raylib GetWindowHandle() на X11 возвращает структуру,
-    // где первым полем идет Native X11 Window Handle
+    
     void *ptr = GetWindowHandle();
     if (!ptr) {
         XCloseDisplay(display);
