@@ -1,81 +1,16 @@
-#include <bits/time.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/utsname.h>
-#include <raylib.h>
 #include <stdint.h>
+#include <raylib.h>
 
-typedef unsigned long XID;
-typedef XID Atom;
-typedef XID Window;
-typedef struct _XDisplay Display;
+#include "widget.h"
 
-extern Display *XOpenDisplay(const char *);
-extern int XCloseDisplay(Display *);
-extern Atom XInternAtom(Display *, const char *, int);
-extern int XChangeProperty(Display *, Window, Atom, Atom, int, int, const unsigned char *, int);
-extern Window XRootWindow(Display *, int);
-extern int XSendEvent(Display *, Window, int, long, void *);
-extern int XFlush(Display *);
-
-typedef struct {
-    int type;
-    unsigned long serial;
-    int send_event;
-    Display *display;
-    Window window;
-    Atom message_type;
-    int format;
-    long data[5];
-} XClientMessageEventCustom;
-
-void ForceAlwaysOnTopLinux(void) {
-    Display *display = XOpenDisplay(NULL);
-    if (!display) return;
-
-    
-    void *ptr = GetWindowHandle();
-    if (!ptr) {
-        XCloseDisplay(display);
-        return;
-    }
-
-    Window window = *(Window *)ptr;
-    if (!window) {
-        XCloseDisplay(display);
-        return;
-    }
-
-    Atom wmState = XInternAtom(display, "_NET_WM_STATE", 0);
-    Atom wmStateAbove = XInternAtom(display, "_NET_WM_STATE_ABOVE", 0);
-    Atom wmStateStaysOnTop = XInternAtom(display, "_NET_WM_STATE_STAYS_ON_TOP", 0);
-    Atom wmWindowType = XInternAtom(display, "_NET_WM_WINDOW_TYPE", 0);
-    Atom wmTypeDock = XInternAtom(display, "_NET_WM_WINDOW_TYPE_DOCK", 0);
-
-    XChangeProperty(display, window, wmWindowType, 4, 32, 0, (const unsigned char *)&wmTypeDock, 1);
-
-    XClientMessageEventCustom xev = {0};
-    xev.type = 33;
-    xev.window = window;
-    xev.message_type = wmState;
-    xev.format = 32;
-    xev.data[0] = 1;
-    xev.data[1] = wmStateAbove;
-    xev.data[2] = wmStateStaysOnTop;
-    xev.data[3] = 1;
-
-    XSendEvent(display, XRootWindow(display, 0), 0, 0x00020000L | 0x00080000L, &xev);
-
-    XFlush(display);
-    XCloseDisplay(display);
-}
 #define FRAME_COUNT 222
 int main(void) {
- SetConfigFlags(FLAG_WINDOW_UNDECORATED | FLAG_WINDOW_TRANSPARENT | FLAG_WINDOW_TOPMOST);
+ SetConfigFlags(WidgetConfigFlags());
   InitWindow(800, 800, "Hatsune Miku");
-  ForceAlwaysOnTopLinux();
-  void* display = GetWindowHandle();
+  WidgetMakeOverlay();
   SetExitKey(KEY_NULL);
   SetWindowPosition(1120, 433);
   SetTargetFPS(100);
@@ -109,6 +44,7 @@ int main(void) {
   int currentFrame = 0;
   int frameCounter = 0;
 while(!WindowShouldClose()){
+  WidgetUpdate();
   BeginDrawing();
   frameCounter++;
   if (frameCounter >= 3) {

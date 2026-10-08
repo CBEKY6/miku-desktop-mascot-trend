@@ -54,8 +54,19 @@ sudo apt install build-essential libraylib-dev libx11-dev
    ```
    * Скомпилируйте:
    ```bash
-   gcc main.c -o miku -lraylib -lX11 -lGL -lm -lpthread -ldl -lrt
+   gcc main.c widget.c -o miku -lraylib -lX11 -lGL -lm -lpthread -ldl -lrt
    ```
+
+   Проще через `make`, он сам определит наличие заголовков X11 и добавит `-lX11`, если они
+   установлены:
+
+   ```bash
+   make
+   ```
+
+   Подсказки оконному менеджеру (поверх всех окон, скрыт из таскара и переключателя окон, не
+   забирает фокус, не мешает полноэкранным окнам) требуют X11; а кликабельность насквозь — по
+   клику под маскотом — работает и под X11, и под Wayland. Нужен raylib 4.2 или новее.
 
 
  * Запустите маскота:
