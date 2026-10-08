@@ -36,6 +36,13 @@ void WidgetMakeOverlay(void);
 // Call once per frame. Keeps the mascot below fullscreen windows (X11/XWayland only).
 void WidgetUpdate(void);
 
+// Anchors the mascot to the bottom-right corner of the primary monitor, `margin` pixels away
+// from the screen edge and from the panel when the display server reports one (X11 and XWayland
+// via _NET_WORKAREA, everywhere else the full monitor area). windowWidth/windowHeight are the
+// mascot window size. Leaves the window where the display server put it if it cannot tell how
+// big the monitor is.
+void WidgetAnchorBottomRight(int windowWidth, int windowHeight, int margin);
+
 // "wayland", "x11", "drm" or "unknown", for logging.
 const char *WidgetDisplayServer(void);
 

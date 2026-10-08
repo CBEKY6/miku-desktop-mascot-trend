@@ -42,6 +42,11 @@ typedef enum {
     SERVER_DRM
 } DisplayServer;
 
+// A rectangle in screen coordinates.
+typedef struct {
+    int x, y, width, height;
+} WidgetArea;
+
 static DisplayServer server = SERVER_UNKNOWN;
 
 #if defined(WIDGET_X11)
@@ -189,7 +194,88 @@ static bool ActiveWindowIsFullscreen(Display *display) {
     return fullscreen;
 }
 
+// _NET_WORKAREA is four CARD32 values per monitor: x, y, width, height, with the panels already
+// subtracted. Only the first entry is read, which is the primary monitor in practice; on a
+// multi-monitor setup the order is the one the window manager uses and is not necessarily the
+// same as raylib's monitor 0.
+static bool QueryX11WorkArea(Display *display, WidgetArea *area) {
+    Atom actualType = None;
+    int actualFormat = 0;
+    unsigned long items = 0, bytesAfter = 0;
+    unsigned char *data = NULL;
+    Atom netWorkArea = XInternAtom(display, "_NET_WORKAREA", False);
+
+    if (XGetWindowProperty(display, DefaultRootWindow(display), netWorkArea, 0, 4, False,
+                           XA_CARDINAL, &actualType, &actualFormat, &items, &bytesAfter,
+                           &data) != Success || data == NULL) return false;
+
+    if (items < 4) {
+        XFree(data);
+        return false;
+    }
+
+    long *values = (long *)data;
+    area->x = (int)values[0];
+    area->y = (int)values[1];
+    area->width = (int)values[2];
+    area->height = (int)values[3];
+    XFree(data);
+
+    return true;
+}
+
+static bool X11WorkArea(Display *display, WidgetArea *area) {
+    XErrorHandler previous = XSetErrorHandler(IgnoreXError);
+    bool found = QueryX11WorkArea(display, area);
+    XSync(display, False);
+    XSetErrorHandler(previous);
+
+    return found;
+}
+
 #endif  // WIDGET_X11
+
+// Area of the primary monitor that is free of panels. raylib knows the monitor geometry but not
+// the panel, so X11 gets asked via _NET_WORKAREA; on native Wayland nothing reports panels, which
+// means a bottom panel will overlap the mascot.
+static WidgetArea PrimaryWorkArea(void) {
+    WidgetArea area;
+    Vector2 origin = GetMonitorPosition(0);
+
+    area.x = (int)origin.x;
+    area.y = (int)origin.y;
+    area.width = GetMonitorWidth(0);
+    area.height = GetMonitorHeight(0);
+
+#if defined(WIDGET_X11)
+    if (widgetActive) {
+        WidgetArea workArea;
+        // A work area smaller than the mascot means this entry is not the monitor we placed on.
+        if (X11WorkArea(xDisplay, &workArea) && workArea.width >= area.width &&
+            workArea.height >= area.height) {
+            area = workArea;
+        }
+    }
+#endif
+
+    return area;
+}
+
+void WidgetAnchorBottomRight(int windowWidth, int windowHeight, int margin) {
+    WidgetArea area = PrimaryWorkArea();
+
+    if (area.width <= 0 || area.height <= 0) {
+        TraceLog(LOG_WARNING, "WIDGET: unknown monitor size, window left where it was");
+        return;
+    }
+
+    int x = area.x + area.width  - windowWidth  - margin;
+    int y = area.y + area.height - windowHeight - margin;
+
+    SetWindowPosition(x, y);
+    TraceLog(LOG_INFO, "WIDGET: anchored bottom-right at %d,%d on a %dx%d area (margin %d)",
+             x, y, area.width, area.height, margin);
+}
 
 void WidgetMakeOverlay(void) {
 #if defined(WIDGET_DRM)
