@@ -80,3 +80,20 @@ sudo apt install build-essential libraylib-dev libx11-dev
    ```bash
    ./miku
 ```
+
+## Options
+
+The mascot appears in the bottom-right corner of the primary monitor, 24px from the edge:
+
+```bash
+./miku --corner=top-left --monitor=-1 --margin=40
+```
+
+| Option | Values | Default |
+|---|---|---|
+| `--corner` | `bottom-right`, `bottom-left`, `top-right`, `top-left` | `bottom-right` |
+| `--monitor` | monitor index, or `-1` for the monitor under the mouse pointer | `0` (primary) |
+| `--margin` | pixels between the mascot and the corner of the screen | `24` |
+| `--help` | show the usage text | |
+
+`--name value` works as well as `--name=value`.

@@ -73,3 +73,20 @@ sudo apt install build-essential libraylib-dev libx11-dev
   ```bash
    ./miku
    ```
+
+## Аргументы командной строки
+
+По умолчанию маскот появляется в правом нижнем углу основного монитора, в 24px от края:
+
+```bash
+./miku --corner=top-left --monitor=-1 --margin=40
+```
+
+| Аргумент | Значения | По умолчанию |
+|---|---|---|
+| `--corner` | `bottom-right`, `bottom-left`, `top-right`, `top-left` | `bottom-right` |
+| `--monitor` | номер монитора или `-1` — монитор под курсором | `0` (основной) |
+| `--margin` | пиксели между маскотом и углом экрана | `24` |
+| `--help` | показать справку | |
+
+Работает и `--name value`, и `--name=value`.

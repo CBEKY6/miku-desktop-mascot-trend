@@ -36,12 +36,29 @@ void WidgetMakeOverlay(void);
 // Call once per frame. Keeps the mascot below fullscreen windows (X11/XWayland only).
 void WidgetUpdate(void);
 
-// Anchors the mascot to the bottom-right corner of the primary monitor, `margin` pixels away
-// from the screen edge and from the panel when the display server reports one (X11 and XWayland
-// via _NET_WORKAREA, everywhere else the full monitor area). windowWidth/windowHeight are the
-// mascot window size. Leaves the window where the display server put it if it cannot tell how
-// big the monitor is.
-void WidgetAnchorBottomRight(int windowWidth, int windowHeight, int margin);
+// Which screen corner the mascot sticks to.
+typedef enum {
+    WIDGET_CORNER_BOTTOM_RIGHT = 0,
+    WIDGET_CORNER_BOTTOM_LEFT,
+    WIDGET_CORNER_TOP_RIGHT,
+    WIDGET_CORNER_TOP_LEFT
+} WidgetCorner;
+
+// Which monitor to appear on.
+typedef enum {
+    // The monitor the mouse pointer is on, falling back to the primary one.
+    WIDGET_MONITOR_CURSOR = -1,
+    // Monitor 0, which the window managers report as primary.
+    WIDGET_MONITOR_PRIMARY = 0
+} WidgetMonitor;
+
+// Moves the mascot into `corner` of the chosen monitor, `margin` pixels away from the screen
+// edge and from the panel when the display server reports one (X11 and XWayland via
+// _NET_WORKAREA, everywhere else the full monitor area). windowWidth/windowHeight are the mascot
+// window size. An unknown corner or monitor, or a monitor geometry that cannot be read, leaves
+// the window where the display server put it.
+void WidgetAnchor(int windowWidth, int windowHeight, WidgetCorner corner, WidgetMonitor monitor,
+                  int margin);
 
 // "wayland", "x11", "drm" or "unknown", for logging.
 const char *WidgetDisplayServer(void);

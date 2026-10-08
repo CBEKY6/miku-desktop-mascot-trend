@@ -194,18 +194,19 @@ static bool ActiveWindowIsFullscreen(Display *display) {
     return fullscreen;
 }
 
-// _NET_WORKAREA is four CARD32 values per monitor: x, y, width, height, with the panels already
-// subtracted. Only the first entry is read, which is the primary monitor in practice; on a
-// multi-monitor setup the order is the one the window manager uses and is not necessarily the
-// same as raylib's monitor 0.
-static bool QueryX11WorkArea(Display *display, WidgetArea *area) {
+// _NET_WORKAREA holds four CARD32 values per monitor: x, y, width, height, with the panels
+// already subtracted. The entries follow the window manager's own monitor order, which is not
+// necessarily raylib's, so `index` is matched against the monitor geometry rather than trusted
+// positionally.
+static bool QueryX11WorkArea(Display *display, int index, WidgetArea *area) {
     Atom actualType = None;
     int actualFormat = 0;
     unsigned long items = 0, bytesAfter = 0;
     unsigned char *data = NULL;
     Atom netWorkArea = XInternAtom(display, "_NET_WORKAREA", False);
+    long offset = (long)index * 4;
 
-    if (XGetWindowProperty(display, DefaultRootWindow(display), netWorkArea, 0, 4, False,
+    if (XGetWindowProperty(display, DefaultRootWindow(display), netWorkArea, offset, 4, False,
                            XA_CARDINAL, &actualType, &actualFormat, &items, &bytesAfter,
                            &data) != Success || data == NULL) return false;
 
@@ -224,34 +225,77 @@ static bool QueryX11WorkArea(Display *display, WidgetArea *area) {
     return true;
 }
 
-static bool X11WorkArea(Display *display, WidgetArea *area) {
+// Reads the work area of monitor `index` (raylib's numbering), or the primary monitor's when the
+// window manager has fewer entries than raylib has monitors.
+static bool X11WorkArea(Display *display, int index, WidgetArea *area) {
     XErrorHandler previous = XSetErrorHandler(IgnoreXError);
-    bool found = QueryX11WorkArea(display, area);
+    bool found = QueryX11WorkArea(display, index, area);
     XSync(display, False);
     XSetErrorHandler(previous);
 
-    return found;
+    if (found) return true;
+
+    // Some window managers only publish the primary monitor. Its work area still covers our
+    // monitor whenever our monitor is at the same origin, which is the single-monitor case.
+    if (index > 0 && QueryX11WorkArea(display, 0, area)) {
+        return true;
+    }
+
+    return false;
 }
 
 #endif  // WIDGET_X11
 
-// Area of the primary monitor that is free of panels. raylib knows the monitor geometry but not
-// the panel, so X11 gets asked via _NET_WORKAREA; on native Wayland nothing reports panels, which
+// Index of the monitor the mascot should appear on. raylib's GetCurrentMonitor() reports the
+// monitor the *window* is on, which is not what is wanted here, so the pointer is matched
+// against the monitor rectangles directly.
+static int ResolveMonitor(WidgetMonitor monitor) {
+    int count = GetMonitorCount();
+    if (count <= 0) return 0;
+
+    if (monitor == WIDGET_MONITOR_CURSOR) {
+        Vector2 pointer = GetMousePosition();
+
+        for (int i = 0; i < count; i++) {
+            Vector2 origin = GetMonitorPosition(i);
+            int width = GetMonitorWidth(i);
+            int height = GetMonitorHeight(i);
+
+            if (pointer.x >= origin.x && pointer.x < origin.x + width &&
+                pointer.y >= origin.y && pointer.y < origin.y + height) {
+                return i;
+            }
+        }
+
+        TraceLog(LOG_WARNING, "WIDGET: no monitor under the pointer, using the primary one");
+        return 0;
+    }
+
+    if (monitor >= 0 && monitor < count) return (int)monitor;
+
+    TraceLog(LOG_WARNING, "WIDGET: monitor %d does not exist (%d found), using the primary one",
+             (int)monitor, count);
+    return 0;
+}
+
+// Area of the given monitor that is free of panels. raylib knows the monitor geometry but not the
+// panel, so X11 gets asked via _NET_WORKAREA; on native Wayland nothing reports panels, which
 // means a bottom panel will overlap the mascot.
-static WidgetArea PrimaryWorkArea(void) {
+static WidgetArea MonitorWorkArea(int index) {
     WidgetArea area;
-    Vector2 origin = GetMonitorPosition(0);
+    Vector2 origin = GetMonitorPosition(index);
 
     area.x = (int)origin.x;
     area.y = (int)origin.y;
-    area.width = GetMonitorWidth(0);
-    area.height = GetMonitorHeight(0);
+    area.width = GetMonitorWidth(index);
+    area.height = GetMonitorHeight(index);
 
 #if defined(WIDGET_X11)
     if (widgetActive) {
         WidgetArea workArea;
-        // A work area smaller than the mascot means this entry is not the monitor we placed on.
-        if (X11WorkArea(xDisplay, &workArea) && workArea.width >= area.width &&
+        // A work area smaller than the monitor means it describes different geometry, or a
+        // panel is eating more than half the screen. Either way it is not worth trusting.
+        if (X11WorkArea(xDisplay, index, &workArea) && workArea.width >= area.width &&
             workArea.height >= area.height) {
             area = workArea;
         }
@@ -261,20 +305,53 @@ static WidgetArea PrimaryWorkArea(void) {
     return area;
 }
 
-void WidgetAnchorBottomRight(int windowWidth, int windowHeight, int margin) {
-    WidgetArea area = PrimaryWorkArea();
+void WidgetAnchor(int windowWidth, int windowHeight, WidgetCorner corner, WidgetMonitor monitor,
+                  int margin) {
+    if (margin < 0) margin = 0;
+
+    int index = ResolveMonitor(monitor);
+    WidgetArea area = MonitorWorkArea(index);
 
     if (area.width <= 0 || area.height <= 0) {
         TraceLog(LOG_WARNING, "WIDGET: unknown monitor size, window left where it was");
         return;
     }
 
-    int x = area.x + area.width  - windowWidth  - margin;
-    int y = area.y + area.height - windowHeight - margin;
+    int x, y;
+    const char *name = "bottom-right";
+
+    switch (corner) {
+        case WIDGET_CORNER_BOTTOM_LEFT:
+            x = area.x + margin;
+            y = area.y + area.height - windowHeight - margin;
+            name = "bottom-left";
+            break;
+        case WIDGET_CORNER_TOP_RIGHT:
+            x = area.x + area.width - windowWidth - margin;
+            y = area.y + margin;
+            name = "top-right";
+            break;
+        case WIDGET_CORNER_TOP_LEFT:
+            x = area.x + margin;
+            y = area.y + margin;
+            name = "top-left";
+            break;
+        case WIDGET_CORNER_BOTTOM_RIGHT:
+            x = area.x + area.width - windowWidth - margin;
+            y = area.y + area.height - windowHeight - margin;
+            name = "bottom-right";
+            break;
+        default:
+            TraceLog(LOG_WARNING, "WIDGET: unknown corner %d, using bottom-right", (int)corner);
+            x = area.x + area.width - windowWidth - margin;
+            y = area.y + area.height - windowHeight - margin;
+            name = "bottom-right";
+            break;
+    }
 
     SetWindowPosition(x, y);
-    TraceLog(LOG_INFO, "WIDGET: anchored bottom-right at %d,%d on a %dx%d area (margin %d)",
-             x, y, area.width, area.height, margin);
+    TraceLog(LOG_INFO, "WIDGET: anchored %s at %d,%d on monitor %d (%dx%d area, margin %d)",
+             name, x, y, index, area.width, area.height, margin);
 }
 
 void WidgetMakeOverlay(void) {
