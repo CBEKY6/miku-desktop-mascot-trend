@@ -64,11 +64,36 @@ sudo apt install build-essential libraylib-dev libx11-dev
  cd miku-desktop-mascot-trend
 ```
 
- * Compile
+ * Compile:
    ```bash
-   gcc main.c -o miku -lraylib -lX11 -lGL -lm -lpthread -ldl -lrt
+   make
    ```
+   Or without `make`:
+   ```bash
+   gcc main.c widget.c -o miku -lraylib -lX11 -lGL -lm -lpthread -ldl -lrt
+   ```
+   `make` detects whether the X11 headers are installed and only then adds `-lX11`. Window
+   manager hints (always on top, hidden from the taskbar and window switcher, no focus
+   stealing, staying below fullscreen windows) need X11; clicks passing through to whatever is
+   underneath work on both X11 and Wayland. Requires raylib 4.2 or newer.
  * Run the mascot:
    ```bash
    ./miku
 ```
+
+## Options
+
+The mascot appears in the bottom-right corner of the primary monitor, 24px from the edge:
+
+```bash
+./miku --corner=top-left --monitor=-1 --margin=40
+```
+
+| Option | Values | Default |
+|---|---|---|
+| `--corner` | `bottom-right`, `bottom-left`, `top-right`, `top-left` | `bottom-right` |
+| `--monitor` | monitor index, or `-1` for the monitor under the mouse pointer | `0` (primary) |
+| `--margin` | pixels between the mascot and the corner of the screen | `24` |
+| `--help` | show the usage text | |
+
+`--name value` works as well as `--name=value`.

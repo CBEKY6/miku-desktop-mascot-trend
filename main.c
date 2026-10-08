@@ -1,83 +1,125 @@
-#include <bits/time.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/utsname.h>
-#include <raylib.h>
+#include <string.h>
 #include <stdint.h>
+#include <raylib.h>
 
-typedef unsigned long XID;
-typedef XID Atom;
-typedef XID Window;
-typedef struct _XDisplay Display;
+#include "widget.h"
 
-extern Display *XOpenDisplay(const char *);
-extern int XCloseDisplay(Display *);
-extern Atom XInternAtom(Display *, const char *, int);
-extern int XChangeProperty(Display *, Window, Atom, Atom, int, int, const unsigned char *, int);
-extern Window XRootWindow(Display *, int);
-extern int XSendEvent(Display *, Window, int, long, void *);
-extern int XFlush(Display *);
-
-typedef struct {
-    int type;
-    unsigned long serial;
-    int send_event;
-    Display *display;
-    Window window;
-    Atom message_type;
-    int format;
-    long data[5];
-} XClientMessageEventCustom;
-
-void ForceAlwaysOnTopLinux(void) {
-    Display *display = XOpenDisplay(NULL);
-    if (!display) return;
-
-    
-    void *ptr = GetWindowHandle();
-    if (!ptr) {
-        XCloseDisplay(display);
-        return;
-    }
-
-    Window window = *(Window *)ptr;
-    if (!window) {
-        XCloseDisplay(display);
-        return;
-    }
-
-    Atom wmState = XInternAtom(display, "_NET_WM_STATE", 0);
-    Atom wmStateAbove = XInternAtom(display, "_NET_WM_STATE_ABOVE", 0);
-    Atom wmStateStaysOnTop = XInternAtom(display, "_NET_WM_STATE_STAYS_ON_TOP", 0);
-    Atom wmWindowType = XInternAtom(display, "_NET_WM_WINDOW_TYPE", 0);
-    Atom wmTypeDock = XInternAtom(display, "_NET_WM_WINDOW_TYPE_DOCK", 0);
-
-    XChangeProperty(display, window, wmWindowType, 4, 32, 0, (const unsigned char *)&wmTypeDock, 1);
-
-    XClientMessageEventCustom xev = {0};
-    xev.type = 33;
-    xev.window = window;
-    xev.message_type = wmState;
-    xev.format = 32;
-    xev.data[0] = 1;
-    xev.data[1] = wmStateAbove;
-    xev.data[2] = wmStateStaysOnTop;
-    xev.data[3] = 1;
-
-    XSendEvent(display, XRootWindow(display, 0), 0, 0x00020000L | 0x00080000L, &xev);
-
-    XFlush(display);
-    XCloseDisplay(display);
-}
 #define FRAME_COUNT 222
-int main(void) {
- SetConfigFlags(FLAG_WINDOW_UNDECORATED | FLAG_WINDOW_TRANSPARENT | FLAG_WINDOW_TOPMOST);
-  InitWindow(800, 800, "Hatsune Miku");
-  ForceAlwaysOnTopLinux();
-  void* display = GetWindowHandle();
+
+// The frames are 720x1280. The original code drew them at (100, -340) in an 800x800 window,
+// which showed texture rows 340..1139 and columns 0..699, i.e. a 700x800 cut out. Sizing the
+// window to that cut out means the window is exactly the mascot, so it can be anchored to a
+// screen corner without empty space hanging off the edge.
+#define WINDOW_WIDTH   700
+#define WINDOW_HEIGHT  800
+#define SPRITE_X       0
+#define SPRITE_Y       340
+
+// Pixels kept between the mascot and the corner of the screen.
+#define SCREEN_MARGIN  24
+
+static void PrintUsage(const char *program) {
+    printf("Usage: %s [options]\n\n", program);
+    printf("  --corner=CORNER    where to put the mascot: bottom-right (default),\n");
+    printf("                     bottom-left, top-right, top-left\n");
+    printf("  --monitor=N        monitor to appear on, 0 is the primary one (default)\n");
+    printf("                     or -1 for the monitor under the mouse pointer\n");
+    printf("  --margin=PIXELS    distance from the corner of the screen (default %d)\n",
+           SCREEN_MARGIN);
+    printf("  --help             show this text\n");
+}
+
+static bool ParseInt(const char *text, int *out) {
+    char *end = NULL;
+    long value = strtol(text, &end, 10);
+
+    if (end == text || *end != '\0') return false;
+
+    *out = (int)value;
+    return true;
+}
+
+// Accepts both "--name=value" and "--name value". Returns false if `arg` is not this option at
+// all; a recognised option with a missing value is reported and then skipped.
+static bool ParseOption(int argc, char **argv, int *i, const char *name, bool numeric,
+                        const char **value) {
+    const char *arg = argv[*i];
+    size_t length = strlen(name);
+
+    if (strncmp(arg, name, length) != 0) return false;
+    if (arg[length] != '\0' && arg[length] != '=') return false;
+
+    if (arg[length] == '=') {
+        *value = arg + length + 1;
+    } else {
+        int dummy = 0;
+        // Guard against "--corner --margin=4" swallowing the next option as a value, but let a
+        // negative number through for the numeric options.
+        if (*i + 1 >= argc || argv[*i + 1][0] == '\0' ||
+            (argv[*i + 1][0] == '-' && !(numeric && ParseInt(argv[*i + 1], &dummy)))) {
+            TraceLog(LOG_WARNING, "MIKU: %s needs a value", name);
+            return false;
+        }
+        *value = argv[++(*i)];
+    }
+
+    // "--name=" with nothing after it is a malformed value, not a missing one.
+    if (**value == '\0') {
+        TraceLog(LOG_WARNING, "MIKU: %s needs a value", name);
+        return false;
+    }
+
+    return true;
+}
+
+int main(int argc, char **argv) {
+  WidgetCorner corner = WIDGET_CORNER_BOTTOM_RIGHT;
+  WidgetMonitor monitor = WIDGET_MONITOR_PRIMARY;
+  int margin = SCREEN_MARGIN;
+  const char *value = NULL;
+
+  for (int i = 1; i < argc; i++) {
+    if (strcmp(argv[i], "--help") == 0 || strcmp(argv[i], "-h") == 0) {
+      PrintUsage(argv[0]);
+      return 0;
+    } else if (ParseOption(argc, argv, &i, "--corner", false, &value)) {
+      if (strcmp(value, "bottom-right") == 0) corner = WIDGET_CORNER_BOTTOM_RIGHT;
+      else if (strcmp(value, "bottom-left") == 0) corner = WIDGET_CORNER_BOTTOM_LEFT;
+      else if (strcmp(value, "top-right") == 0) corner = WIDGET_CORNER_TOP_RIGHT;
+      else if (strcmp(value, "top-left") == 0) corner = WIDGET_CORNER_TOP_LEFT;
+      else {
+        TraceLog(LOG_WARNING, "MIKU: unknown corner '%s', using bottom-right", value);
+        corner = WIDGET_CORNER_BOTTOM_RIGHT;
+      }
+    } else if (ParseOption(argc, argv, &i, "--monitor", true, &value)) {
+      int parsed = 0;
+      if (!ParseInt(value, &parsed) || parsed < -1) {
+        TraceLog(LOG_WARNING, "MIKU: bad monitor '%s', using the primary one", value);
+      } else {
+        monitor = (WidgetMonitor)parsed;
+      }
+    } else if (ParseOption(argc, argv, &i, "--margin", false, &value)) {
+      int parsed = 0;
+      if (!ParseInt(value, &parsed) || parsed < 0) {
+        TraceLog(LOG_WARNING, "MIKU: bad margin '%s', using %d", value, SCREEN_MARGIN);
+      } else {
+        margin = parsed;
+      }
+    } else {
+      TraceLog(LOG_WARNING, "MIKU: unknown option '%s'", argv[i]);
+      PrintUsage(argv[0]);
+      return 1;
+    }
+  }
+
+ SetConfigFlags(WidgetConfigFlags());
+  InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Hatsune Miku");
+  WidgetMakeOverlay();
   SetExitKey(KEY_NULL);
-  SetWindowPosition(1120, 433);
+  WidgetAnchor(WINDOW_WIDTH, WINDOW_HEIGHT, corner, monitor, margin);
   SetTargetFPS(100);
   Texture2D frames[FRAME_COUNT];
   char fileName[32];
@@ -109,6 +151,7 @@ int main(void) {
   int currentFrame = 0;
   int frameCounter = 0;
 while(!WindowShouldClose()){
+  WidgetUpdate();
   BeginDrawing();
   frameCounter++;
   if (frameCounter >= 3) {
@@ -116,7 +159,9 @@ currentFrame = (currentFrame +1) % FRAME_COUNT;
 frameCounter = 0;
   }
   ClearBackground(BLANK);
-  DrawTexture(frames[currentFrame], 100, -340,WHITE);
+  Rectangle source = { SPRITE_X, SPRITE_Y, WINDOW_WIDTH, WINDOW_HEIGHT };
+  Rectangle dest = { 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT };
+  DrawTexturePro(frames[currentFrame], source, dest, (Vector2){ 0, 0 }, 0, WHITE);
   EndDrawing();
 
  }
