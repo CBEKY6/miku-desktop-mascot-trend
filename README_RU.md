@@ -28,20 +28,58 @@
      
 (Если честно, за пределами KDE Plasma я не тестировал, так что тут как повезёт)
 
-Зависимости
+## Зависимости
 
-* Для Arch-подобных дистрибутивов:
+> Для дистрибутивов кроме Arch Linux имена пакетов сверены с Repology, но на самих системах не тестировались.
+
+### Arch / Manjaro / EndeavourOS
 ```bash
 sudo pacman -S gcc raylib libx11
 ```
 
-* Для Debian/Ubuntu-подобных дистрибутивов:
+### Debian (testing/unstable) / Ubuntu / Mint / Pop!_OS
 ```bash
 sudo apt update
-```
-```bash
 sudo apt install build-essential libraylib-dev libx11-dev
+```
+Если `libraylib-dev` не найден (Debian stable или Старые Ubuntu), смотри раздел «Сборка Raylib из исходников»
 
+### Fedora
+```bash
+sudo dnf install gcc raylib-devel libX11-devel mesa-libGL-devel
+```
+
+### OpenSUSE Tumbleweed
+```bash
+sudo zypper install gcc raylib-devel libX11-devel Mesa-libGL-devel
+```
+В Leap 15.6 старая версия raylib 4.5.0, лучше собрать из исходников.
+
+### Alpine (должен быть включён репозиторий community)
+```bash
+sudo apk add build-base raylib-dev libx11-dev mesa-dev
+```
+
+### Gentoo (raylib находится в оверлее GURU)
+```bash
+sudo eselect repository enable guru
+sudo emaint sync -r guru
+sudo emerge media-libs/raylib x11-libs/libX11
+```
+
+### NixOS
+```bash
+nix-shell -p gcc raylib xorg.libX11 libGL
+```
+
+### Сборка Raylib из исходников (любой дистрибутив)
+Если нужных зависимостей нет в репозитории, скачайте перед этим gcc, git, cmake, make,dev-пакеты X11 и OpenGL,Потом:
+```bash
+git clone https://github.com/raysan5/raylib.git
+cd raylib && mkdir build && cd build
+cmake ..
+make -j$(nproc)
+sudo make install
 ```
 * Сборка и запуск
 
