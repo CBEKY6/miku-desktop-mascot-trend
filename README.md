@@ -16,13 +16,13 @@ A desktop mascot for Linux written in pure C using the Raylib library. No Wallpa
 
 ### Compatibility
 
-- 100% working on: KDE Plasma
+- 100% working on: KDE Plasma,Hyprland
 
 Likely to work on:
 
 - GNOME
 - XFCE
-- Hyprland, Niri, Sway, i3
+- Niri, Sway, i3
 
 (To be honest, I haven't tested it outside of KDE Plasma, so good luck!)
 
