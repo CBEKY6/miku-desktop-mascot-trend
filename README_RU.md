@@ -2,80 +2,101 @@
 
 
 
-# Форк Hatsune Miku Desktop Mascot на hyprland
+# Hatsune Miku Desktop Mascot / Настольный маскот Хацунэ Мику
 
 
 > *Та самая Мику из тренда «слышь ты залип, опа опа оп»!*
+> > That same Miku from the "slysh ty zalip, opa opa op" trend!
 > 
 > [Read in English](README.md)
 > ---
 ## Русская версия
 
-Маскот для рабочего стола Linux систем, написанный на C с использованием библиотеки Raylib. Wallpaper Engine или Anima Engine не требуется.
+Маскот для рабочего стола Linux, написанный на чистом C с использованием библиотеки Raylib. Никакого Wallpaper Engine или Anima Engine не требуется.
 
-### Совместимость
+Совместимость
 
- * Форк 100% работает на: Hyprland и KDE Plasma
+ * 100% работает на: KDE Plasma
+   
+  Скорее всего, будет работать на:
  
-### Зависимости
+   * GNOME
+     
+   * XFCE
+     
+   * Hyprland, Niri, Sway, i3
+     
+(Если честно, за пределами KDE Plasma я не тестировал, так что тут как повезёт)
 
-* Для Arch-подобных дистрибутивов:
+## Зависимости
+
+> Для дистрибутивов кроме Arch Linux имена пакетов сверены с Repology, но на самих системах не тестировались.
+
+### Arch / Manjaro / EndeavourOS
 ```bash
 sudo pacman -S gcc raylib libx11
 ```
 
-* Для Debian/Ubuntu-подобных дистрибутивов:
+### Debian (testing/unstable) / Ubuntu / Mint / Pop!_OS
 ```bash
 sudo apt update
+sudo apt install build-essential libraylib-dev libx11-dev
 ```
-```bash
-sudo apt install build-essential libraylib-dev libx11-dev libxext-dev
+Если `libraylib-dev` не найден (Debian stable или Старые Ubuntu), смотри раздел «Сборка Raylib из исходников»
 
-```
-
-* Для Fedora-подобных дистрибутивов:
+### Fedora
 ```bash
-  sudo dnf install gcc make raylib-devel libX11-devel libXext-devel
-  ```
-
-### Сборка и запуск
-
-  * Клонируйте репозиторий и перейдите в папку:
-```bash
-  git clone https://github.com/b42h4n/miku4hypr
-   ```
-```bash
-   cd miku4hypr
-   ```
-  * Скомпилируйте:
-```bash
-   gcc main.c -o miku -lraylib -lX11 -lXext -lGL -lm -lpthread -ldl -lrt -lXext
-   ```
-  * Так же, пропишите в .config/hypr/config/windowrules.lua следующее:
-```bash
-  hl.window_rule({
-    match = { title = "^(Hatsune Miku)$" },
-    float = true,
-    border_size = 0,
-    no_shadow = true,
-    no_blur = true,
-    pin = true,
-    no_initial_focus = true,
-    opacity = "1.0 1.0 override",
-    no_focus = true,
-    move = { 1120, 433 },
-})
+sudo dnf install gcc raylib-devel libX11-devel mesa-libGL-devel
 ```
 
-  * Запустите маскота:
+### OpenSUSE Tumbleweed
 ```bash
+sudo zypper install gcc raylib-devel libX11-devel Mesa-libGL-devel
+```
+В Leap 15.6 старая версия raylib 4.5.0, лучше собрать из исходников.
+
+### Alpine (должен быть включён репозиторий community)
+```bash
+sudo apk add build-base raylib-dev libx11-dev mesa-dev
+```
+
+### Gentoo (raylib находится в оверлее GURU)
+```bash
+sudo eselect repository enable guru
+sudo emaint sync -r guru
+sudo emerge media-libs/raylib x11-libs/libX11
+```
+
+### NixOS
+```bash
+nix-shell -p gcc raylib xorg.libX11 libGL
+```
+
+### Сборка Raylib из исходников (любой дистрибутив)
+Если нужных зависимостей нет в репозитории, скачайте перед этим gcc, git, cmake, make,dev-пакеты X11 и OpenGL,Потом:
+```bash
+git clone https://github.com/raysan5/raylib.git
+cd raylib && mkdir build && cd build
+cmake ..
+make -j$(nproc)
+sudo make install
+```
+* Сборка и запуск
+
+ * Клонируйте репозиторий и перейдите в папку:
+  ```bash
+  git clone https://github.com/CBEKY6/miku-desktop-mascot-trend.git
+   ```
+   ```bash
+   cd miku-desktop-mascot-trend
+   ```
+   * Скомпилируйте:
+   ```bash
+   gcc main.c -o miku -lraylib -lX11 -lGL -lm -lpthread -ldl -lrt
+   ```
+
+
+ * Запустите маскота:
+  ```bash
    ./miku
    ```
-
-
-### Примечание
-
- * На Мику не работают клики. Чтобы её закрыть, выполните в терминале:
-```bash
-  pkill -9 -i miku
-  ```
