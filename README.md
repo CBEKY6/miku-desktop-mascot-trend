@@ -24,7 +24,7 @@ Likely to work on:
 - XFCE
 - Niri, Sway, i3
 
-(To be honest, I haven't tested it outside of KDE Plasma, so good luck!)
+(To be honest, I haven't tested it outside of KDE Plasma and Hyprland, so good luck!)
 
 ## Dependencies
 
